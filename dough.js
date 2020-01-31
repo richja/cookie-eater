@@ -1,11 +1,11 @@
-document.addEventListener("DOMContentLoaded", (event) => { 
+document.addEventListener("DOMContentLoaded", event => { 
     let db = initFireFirebase()
     let counterRef = db.collection("hits").doc("counter")
 
     setCounter(getCounter())
 
-    counterRef.onSnapshot((doc) => {
-        getGlobalCounter(counterRef).then((result) => {
+    counterRef.onSnapshot(doc => {
+        getGlobalCounter(counterRef).then(result => {
             setGlobalCounter(result)
         })
     })
@@ -18,7 +18,7 @@ document.addEventListener("DOMContentLoaded", (event) => {
             toggleCookieEater()
             changeFavicon("favicon.ico")
             incrementCounter()
-            incrementGlobalCounter(counterRef)
+            incrementGlobalCounter(db, counterRef)
         }, 1000)
     }, false)
 })
@@ -40,29 +40,26 @@ function setGlobalCounter(counter) {
     document.getElementById("cookie-counter-global").innerText = buildContent(counter)
 }
 
-
-
 function incrementCounter() {
     let counter = getCounter()
     localStorage.setItem("counter", ++counter)
     setCounter(counter) 
 }
 
-function incrementGlobalCounter(ref) {
-    ref.get().then((doc) => {
-        if (doc.exists) {
-            let counterValue = doc.data().total
-            ref.set({
-                total: ++counterValue
-            }).then(() => {
-                console.log("Document successfully updated!")
-            })
-        } else {
-            console.log("No such document!")
-        }
-    }).catch((error) => {
-        console.log("Error getting document:", error)
-    })
+function incrementGlobalCounter(db, ref) {
+    db.runTransaction(transaction => {
+        return transaction.get(ref).then(doc => {
+            if (doc.exists) {
+                let counterValue = doc.data().total
+                const finalData = {
+                    total: ++counterValue,
+                }
+                transaction.set(ref, finalData)
+            } else {
+                console.log("No such document!")
+            }
+        })
+    }).catch(err => console.error('Transaction failed: ', err))
 }
 
 function getCounter() {
@@ -73,14 +70,14 @@ function getCounter() {
 }
 
 function getGlobalCounter(ref) {
-    return ref.get().then((doc) => {
+    return ref.get().then(doc => {
         if (doc.exists) {
             return doc.data().total
         } else {
             console.log("No such document!")
             return 0
         }
-    }).catch((error) => {
+    }).catch(error => {
         console.log("Error getting document:", error)
     })
 }
