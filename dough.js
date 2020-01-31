@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", event => { 
     let db = initFireFirebase()
-    let counterRef = db.collection("hits").doc("counter")
+    let counterRef = db.collection("global").doc("counter")
+    let hitsCollection = db.collection("hits")
 
     setCounter(getCounter())
 
@@ -19,6 +20,7 @@ document.addEventListener("DOMContentLoaded", event => {
             changeFavicon("favicon.ico")
             incrementCounter()
             incrementGlobalCounter(db, counterRef)
+            saveHit(hitsCollection)
         }, 1000)
     }, false)
 })
@@ -74,12 +76,16 @@ function getGlobalCounter(ref) {
         if (doc.exists) {
             return doc.data().total
         } else {
-            console.log("No such document!")
+            console.log("No such document!", doc)
             return 0
         }
-    }).catch(error => {
-        console.log("Error getting document:", error)
-    })
+    }).catch(error => console.log("Error getting document:", error))
+}
+
+function saveHit(collection) {
+    collection.add({
+        timestamp: firebase.firestore.Timestamp.now()
+    }).catch(error => console.error("Error saving a hit: ", error))
 }
 
 function buildContent(counter) {
