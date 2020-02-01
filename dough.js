@@ -18,9 +18,10 @@ document.addEventListener("DOMContentLoaded", event => {
         setTimeout(() => {
             toggleCookieEater()
             changeFavicon("favicon.ico")
-            incrementCounter()
-            incrementGlobalCounter(db, counterRef)
-            saveHit(hitsCollection)
+            incrementGlobalCounter(db, counterRef).then(() => {
+                incrementCounter()
+                saveHit(hitsCollection)
+            }, err => console.log("error on incrementing:", err))
         }, 1000)
     }, false)
 })
@@ -49,7 +50,7 @@ function incrementCounter() {
 }
 
 function incrementGlobalCounter(db, ref) {
-    db.runTransaction(transaction => {
+    return db.runTransaction(transaction => {
         return transaction.get(ref).then(doc => {
             if (doc.exists) {
                 let counterValue = doc.data().total
