@@ -57,7 +57,7 @@ function incrementGlobalCounter(db, ref) {
                 const finalData = {
                     total: ++counterValue,
                 }
-                transaction.set(ref, finalData)
+                transaction.update(ref, finalData)
             } else {
                 console.log("No such document!")
             }
